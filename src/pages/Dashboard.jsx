@@ -149,37 +149,6 @@ const ModernDashboard = () => {
     ],
   };
 
-  const tripTrendsData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-      {
-        label: 'Completed Trips',
-        data: [12, 19, 15, 17, 14, reportData.tripReporting.stats.completed],
-        borderColor: 'rgb(34, 197, 94)',
-        backgroundColor: 'rgba(34, 197, 94, 0.1)',
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: 'rgb(34, 197, 94)',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-      },
-      {
-        label: 'Cancelled Trips',
-        data: [3, 5, 2, 4, 3, reportData.tripReporting.stats.cancelled],
-        borderColor: 'rgb(239, 68, 68)',
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: 'rgb(239, 68, 68)',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-      },
-    ],
-  };
 
   const tripStatsPieData = {
     labels: ['Completed', 'Ongoing', 'Cancelled'],
@@ -202,51 +171,6 @@ const ModernDashboard = () => {
     ],
   };
 
-  const financialRadarData = {
-    labels: ['Earnings', 'Balance', 'Commission', 'Gross Fare', 'Transactions', 'Growth'],
-    datasets: [
-      {
-        label: 'Financial Performance',
-        data: [
-          reportData.financialSummary.totalEarnings || 65,
-          reportData.financialSummary.balance || 45,
-          parseInt(reportData.vendorInfo.commission) || 40,
-          reportData.tripReporting.stats.totalGrossFar || 30,
-          reportData.financialSummary.transactions.length || 20,
-          75
-        ],
-        backgroundColor: 'rgba(139, 92, 246, 0.2)',
-        borderColor: 'rgb(139, 92, 246)',
-        borderWidth: 2,
-        pointBackgroundColor: 'rgb(139, 92, 246)',
-        pointBorderColor: '#fff',
-        pointHoverRadius: 8,
-      },
-    ],
-  };
-
-  const performanceData = {
-    labels: ['Driver Performance', 'Fleet Efficiency', 'Trip Success', 'Revenue Growth', 'Customer Rating'],
-    datasets: [
-      {
-        label: 'Current Performance',
-        data: [
-          (reportData.driverManagement.stats.online / reportData.driverManagement.stats.total) * 100 || 0,
-          (reportData.fleetManagement.total > 0 ? 85 : 0),
-          reportData.tripReporting.stats.total > 0
-            ? (reportData.tripReporting.stats.completed / reportData.tripReporting.stats.total) * 100
-            : 0,
-          45,
-          4.2
-        ],
-        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-        borderColor: 'rgb(59, 130, 246)',
-        borderWidth: 2,
-        pointBackgroundColor: 'rgb(59, 130, 246)',
-        pointBorderColor: '#fff',
-      },
-    ],
-  };
 
   const chartOptions = {
     responsive: true,
@@ -453,70 +377,14 @@ const ModernDashboard = () => {
             </div>
           </div>
 
-          {/* Trip Trends Line Chart */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <FaChartLineIcon className="text-green-600" />
-                Trip Trends Analysis
-              </h3>
-              <div className="flex gap-2">
-                <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg">6M</button>
-                <button className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-lg">1Y</button>
-              </div>
-            </div>
-            <div className="h-80">
-              <Line data={tripTrendsData} options={lineChartOptions} />
-            </div>
-          </div>
-        </div>
-
-        {/* Second Row Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          {/* Trip Stats Pie Chart */}
+          {/* Trip Statistics Pie Chart */}
           <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
             <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
               <FaChartPie className="text-purple-600" />
               Trip Statistics
             </h3>
-            <div className="h-72">
+            <div className="h-80">
               <Pie data={tripStatsPieData} options={chartOptions} />
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-              <div>
-                <p className="text-2xl font-bold text-green-600">{reportData.tripReporting.stats.completed}</p>
-                <p className="text-xs text-gray-500">Completed</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-blue-600">{reportData.tripReporting.stats.ongoing}</p>
-                <p className="text-xs text-gray-500">Ongoing</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-red-600">{reportData.tripReporting.stats.cancelled}</p>
-                <p className="text-xs text-gray-500">Cancelled</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Financial Radar Chart */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-              <FaCreditCard className="text-orange-600" />
-              Financial Performance
-            </h3>
-            <div className="h-72">
-              <Radar data={financialRadarData} options={chartOptions} />
-            </div>
-          </div>
-
-          {/* Performance Gauge */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-              <FaChartLine className="text-indigo-600" />
-              Performance Metrics
-            </h3>
-            <div className="h-72">
-              <Radar data={performanceData} options={chartOptions} />
             </div>
           </div>
         </div>
