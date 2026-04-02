@@ -1,5 +1,5 @@
-// src/components/Header.jsx
 import { memo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useFont } from "../context/FontContext";
 import { 
@@ -9,10 +9,8 @@ import {
   FaPalette, 
   FaFont, 
   FaTimes,
-  FaBriefcase,
-  FaStar,
-  FaGem,
-  FaSquare
+  FaBell,
+  FaUserCircle
 } from "react-icons/fa";
 
 const SettingsModal = ({
@@ -271,6 +269,7 @@ const Header = memo(({
   toggleSidebar,
   currentPageTitle
 }) => {
+  const navigate = useNavigate();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { themeColors, toggleTheme, palette, changePalette, availablePalettes } = useTheme();
   const { currentFont } = useFont();
@@ -309,38 +308,38 @@ const Header = memo(({
 
         <div className="flex items-center space-x-2">
         
-          {/* Settings Button */}
+          {/* Notification Button */}
           <button
-            onClick={() => setIsSettingsOpen(true)}
-            className="p-2 rounded-md border hover:scale-110 hover:rotate-45 transition-all duration-300 group"
+            onClick={() => navigate("/notifications")}
+            className="p-2 rounded-md border hover:scale-110 transition-all duration-300 group relative"
             style={{
               backgroundColor: themeColors.background,
               color: themeColors.text,
               borderColor: themeColors.border,
             }}
-            aria-label="Open settings"
-            title="Settings"
+            aria-label="Notifications"
+            title="Notifications"
           >
-            <FaCog className="text-sm group-hover:animate-spin" />
+            <FaBell className="text-sm group-hover:animate-bounce" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full border border-white"></span>
           </button>
 
-          {/* Quick Theme Toggle */}
+          {/* Profile Button */}
           <button
-            onClick={toggleTheme}
-            className="p-2 rounded-md border hover:scale-110 transition-all duration-300 group"
+            onClick={() => navigate("/profile")}
+            className="p-1 pr-3 rounded-full border hover:shadow-md transition-all duration-300 flex items-center gap-2 group"
             style={{
               backgroundColor: themeColors.background,
               color: themeColors.text,
               borderColor: themeColors.border,
             }}
-            aria-label="Quick theme toggle"
-            title={`Switch to ${themeColors.mode === 'dark' ? 'Light' : 'Dark'} Mode`}
+            aria-label="Profile"
+            title="Profile"
           >
-            {themeColors.mode === "dark" ? (
-              <FaSun className="text-sm group-hover:rotate-180 transition-transform duration-300" />
-            ) : (
-              <FaMoon className="text-sm group-hover:rotate-180 transition-transform duration-300" />
-            )}
+            <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+               <FaUserCircle className="text-xl" />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Portal</span>
           </button>
         </div>
       </header>

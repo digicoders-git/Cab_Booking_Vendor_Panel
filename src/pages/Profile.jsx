@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import api from "../utils/api";
 import { toast } from "sonner";
-import { 
-  User, Mail, Phone, Building2, MapPin, Map, 
-  CreditCard, Landmark, Wallet, Camera, Save, 
+import {
+  User, Mail, Phone, Building2, MapPin, Map,
+  CreditCard, Landmark, Wallet, Camera, Save,
   Edit3, X, CheckCircle2, Hash, Percent,
   Lock, ShieldCheck, Key
 } from "lucide-react";
@@ -115,18 +115,18 @@ export default function Profile() {
 
     try {
       const fd = new FormData();
-      
+
       // Basic info
       fd.append("name", formData.name);
       fd.append("phone", formData.phone);
       fd.append("companyName", formData.companyName || "");
-      
+
       // Address info
       fd.append("address", formData.address || "");
       fd.append("city", formData.city || "");
       fd.append("state", formData.state || "");
       fd.append("pincode", formData.pincode || "");
-      
+
       // Bank info
       if (formData.bankDetails) {
         fd.append("accountNumber", formData.bankDetails.accountNumber || "");
@@ -172,25 +172,25 @@ export default function Profile() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4 space-y-8 animate-in fade-in duration-700">
-      
+    <div className="max-w-8xl mx-auto py-8 px-4 space-y-8 animate-in fade-in duration-700">
+
       {/* ── Profile Header ── */}
       <div className="relative group rounded-3xl bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-1 shadow-2xl shadow-indigo-100">
         <div className="bg-white rounded-[1.4rem] p-8 md:p-10 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
-          
+
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 opacity-10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
-          
+
           <div className="relative z-10 text-center md:text-left">
             <div className="relative inline-block group/img">
               <div className="w-32 h-32 md:w-36 md:h-36 rounded-2xl overflow-hidden shadow-xl ring-4 ring-white">
-                <img 
-                  src={imagePreview || (profile?.image ? `${import.meta.env.VITE_IMAGE_BASE_URL}/${profile.image}` : `https://ui-avatars.com/api/?name=${profile?.name}&background=6366f1&color=fff&size=500`)} 
-                  alt={profile?.name} 
+                <img
+                  src={imagePreview || (profile?.image ? `${import.meta.env.VITE_IMAGE_BASE_URL}/uploads/${profile.image}` : `https://ui-avatars.com/api/?name=${profile?.name}&background=6366f1&color=fff&size=500`)}
+                  alt={profile?.name}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110"
                 />
               </div>
               {isEditing && (
-                <button 
+                <button
                   onClick={() => fileInputRef.current?.click()}
                   className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity backdrop-blur-[2px] rounded-2xl"
                 >
@@ -218,13 +218,13 @@ export default function Profile() {
           <div className="flex gap-3 relative z-10 w-full md:w-auto">
             {isEditing ? (
               <>
-                <button 
+                <button
                   onClick={() => { setIsEditing(false); setFormData({ ...profile, password: "", confirmPassword: "" }); setImagePreview(null); }}
                   className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-all active:scale-95"
                 >
                   <X size={18} /> Cancel
                 </button>
-                <button 
+                <button
                   onClick={handleUpdate}
                   className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95"
                 >
@@ -232,7 +232,7 @@ export default function Profile() {
                 </button>
               </>
             ) : (
-              <button 
+              <button
                 onClick={() => setIsEditing(true)}
                 className="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95"
               >
@@ -261,7 +261,7 @@ export default function Profile() {
 
       {/* ── Forms ── */}
       <div className="grid grid-cols-1 gap-8">
-        
+
         <InfoGroup title="Basic Information" icon={User}>
           <DisplayItem icon={User} label="Full Name" value={profile?.name} name="name" isEditing={isEditing} formData={formData} onChange={handleInputChange} />
           <DisplayItem icon={Phone} label="Phone Number" value={profile?.phone} name="phone" isEditing={isEditing} formData={formData} onChange={handleInputChange} />

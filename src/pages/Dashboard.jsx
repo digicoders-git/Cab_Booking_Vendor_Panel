@@ -305,27 +305,15 @@ const ModernDashboard = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="">
-        <div className="max-w-8xl mx-auto  sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Vendor Analytics Dashboard</h1>
-              <p className="text-gray-600 mt-1">Comprehensive insights and performance metrics</p>
-            </div>
-            <div className="flex gap-3">
-              <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition flex items-center gap-2">
-                <FaCalendarAlt className="text-sm" />
-                <span>Last 30 days</span>
-              </button>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
-                <FaDownload className="text-sm" />
-                <span>Export Report</span>
-              </button>
-            </div>
+        <div className="max-w-8xl mx-auto sm:px-6 lg:px-8 py-8 border-b border-gray-100/50 mb-4">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-4xl font-black text-gray-900 tracking-tight uppercase">Vendor <span className="text-blue-600">Analytics</span></h1>
+            <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.4em] ml-1">Comprehensive operational insights and performance metrics</p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
         {/* Vendor Profile Card */}
         <div className="bg-white rounded-2xl shadow-lg mb-8 overflow-hidden border border-gray-100">
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">

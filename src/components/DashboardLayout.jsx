@@ -70,7 +70,7 @@ const DashboardLayout = () => {
         />
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-3 p-2" style={{ backgroundColor: themeColors.background }}>
+        <main className="flex-1 overflow-y-auto p-lg-0" style={{ backgroundColor: themeColors.background }}>
           <Outlet />
         </main>
       </div>
