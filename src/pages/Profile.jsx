@@ -184,7 +184,9 @@ export default function Profile() {
             <div className="relative inline-block group/img">
               <div className="w-32 h-32 md:w-36 md:h-36 rounded-2xl overflow-hidden shadow-xl ring-4 ring-white">
                 <img
-                  src={imagePreview || (profile?.image ? `${import.meta.env.VITE_IMAGE_BASE_URL}/uploads/${profile.image}` : `https://ui-avatars.com/api/?name=${profile?.name}&background=6366f1&color=fff&size=500`)}
+                  src={imagePreview || (profile?.image
+                    ? (profile.image.startsWith("http") ? profile.image : `${import.meta.env.VITE_API_BASE_URL}/uploads/${profile.image.replace(/^\//, "").replace(/^uploads\//, "")}`)
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || "V")}&background=6366f1&color=fff&size=500`)}
                   alt={profile?.name}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110"
                 />
