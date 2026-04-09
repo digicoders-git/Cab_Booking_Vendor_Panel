@@ -5,7 +5,7 @@ import {
   User, Mail, Phone, Building2, MapPin, Map,
   CreditCard, Landmark, Wallet, Camera, Save,
   Edit3, X, CheckCircle2, Hash, Percent,
-  Lock, ShieldCheck, Key
+  Lock, ShieldCheck, Key, Upload
 } from "lucide-react";
 
 // ─── Helper Components (Defined outside to prevent re-mounting on state change) ─
@@ -56,6 +56,15 @@ export default function Profile() {
   });
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
+
+  // Document states
+  const [aadharFile, setAadharFile] = useState(null);
+  const [panFile, setPanFile] = useState(null);
+  const [gstFile, setGstFile] = useState(null);
+  const [aadharPreview, setAadharPreview] = useState(null);
+  const [panPreview, setPanPreview] = useState(null);
+  const [gstPreview, setGstPreview] = useState(null);
+
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -144,6 +153,9 @@ export default function Profile() {
       if (selectedFile) {
         fd.append("image", selectedFile);
       }
+      if (aadharFile) fd.append("aadhar", aadharFile);
+      if (panFile) fd.append("pan", panFile);
+      if (gstFile) fd.append("gst", gstFile);
 
       const res = await api("/api/vendors/profile/self-update", {
         method: "PUT",
@@ -157,6 +169,12 @@ export default function Profile() {
         setFormData(prev => ({ ...res.vendor, password: "", confirmPassword: "" }));
         setImagePreview(null);
         setSelectedFile(null);
+        setAadharFile(null);
+        setPanFile(null);
+        setGstFile(null);
+        setAadharPreview(null);
+        setPanPreview(null);
+        setGstPreview(null);
       }
     } catch (error) {
       toast.error(error.message || "Something went wrong", { id: updateToast });
@@ -221,7 +239,14 @@ export default function Profile() {
             {isEditing ? (
               <>
                 <button
-                  onClick={() => { setIsEditing(false); setFormData({ ...profile, password: "", confirmPassword: "" }); setImagePreview(null); }}
+                  onClick={() => { 
+                    setIsEditing(false); 
+                    setFormData({ ...profile, password: "", confirmPassword: "" }); 
+                    setImagePreview(null);
+                    setAadharPreview(null);
+                    setPanPreview(null);
+                    setGstPreview(null);
+                  }}
                   className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-all active:scale-95"
                 >
                   <X size={18} /> Cancel
@@ -246,19 +271,25 @@ export default function Profile() {
       </div>
 
       {/* ── Stats ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5">
-          <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600"><Wallet size={24} /></div>
-          <div><p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Wallet Balance</p><p className="text-2xl font-black text-gray-800">₹{profile?.walletBalance?.toLocaleString("en-IN")}</p></div>
-        </div>
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5">
-          <div className="w-12 h-12 bg-fuchsia-50 rounded-xl flex items-center justify-center text-fuchsia-600"><Map size={24} /></div>
-          <div><p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Assigned Area</p><p className="text-lg font-bold text-gray-800 line-clamp-1">{profile?.assignedArea}</p></div>
-        </div>
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5">
-          <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600"><Percent size={24} /></div>
-          <div><p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Commission</p><p className="text-2xl font-black text-gray-800">{profile?.commissionPercentage}%</p></div>
-        </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {[
+          { label: "Wallet Balance",  value: `₹${(profile?.walletBalance || 0).toLocaleString("en-IN")}`,  bg: "bg-indigo-50",  color: "text-indigo-600",  icon: Wallet },
+          { label: "Total Earnings",  value: `₹${(profile?.totalEarnings || 0).toLocaleString("en-IN")}`,  bg: "bg-emerald-50", color: "text-emerald-600", icon: Wallet },
+          { label: "Commission",      value: `${profile?.commissionPercentage ?? 0}%`,                       bg: "bg-amber-50",   color: "text-amber-600",   icon: Percent },
+          { label: "Total Drivers",   value: profile?.totalDrivers ?? 0,                                     bg: "bg-violet-50",  color: "text-violet-600",  icon: User },
+          { label: "Total Fleets",    value: profile?.totalFleets ?? 0,                                      bg: "bg-fuchsia-50", color: "text-fuchsia-600", icon: Building2 },
+          { label: "Assigned Area",   value: profile?.assignedArea || "—",                                   bg: "bg-sky-50",     color: "text-sky-600",     icon: Map },
+        ].map((s) => (
+          <div key={s.label} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-3">
+            <div className={`w-10 h-10 ${s.bg} rounded-xl flex items-center justify-center flex-shrink-0`}>
+              <s.icon size={18} className={s.color} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-gray-400 font-medium truncate">{s.label}</p>
+              <p className="text-base font-bold text-gray-800 truncate">{s.value}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* ── Forms ── */}
@@ -284,6 +315,65 @@ export default function Profile() {
           <DisplayItem icon={Map} label="State" value={profile?.state} name="state" isEditing={isEditing} formData={formData} onChange={handleInputChange} />
           <DisplayItem icon={Hash} label="Pincode" value={profile?.pincode} name="pincode" isEditing={isEditing} formData={formData} onChange={handleInputChange} />
         </InfoGroup>
+
+        {/* ── Documents ── */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-rose-50 rounded-lg text-rose-600"><Hash size={20} /></div>
+            <h3 className="text-lg font-bold text-gray-800">Documents</h3>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              { label: "Aadhar Card", key: "aadhar", setter: setAadharFile, previewSetter: setAadharPreview, currentPreview: aadharPreview },
+              { label: "PAN Card",    key: "pan", setter: setPanFile, previewSetter: setPanPreview, currentPreview: panPreview },
+              { label: "GST Cert.",   key: "gst", setter: setGstFile, previewSetter: setGstPreview, currentPreview: gstPreview },
+            ].map(({ label, key, setter, previewSetter, currentPreview }) => {
+              const path = profile?.documents?.[key];
+              const serverSrc  = path
+                ? (path.startsWith("http") ? path : `${import.meta.env.VITE_API_BASE_URL}/uploads/${path.replace(/^\//, "").replace(/^uploads\//, "")}`)
+                : null;
+              const src = currentPreview || serverSrc;
+              
+              return (
+                <div key={key} className="flex flex-col gap-2">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</span>
+                  <div className="relative group/doc overflow-hidden rounded-xl border border-gray-100">
+                    {src ? (
+                      <img src={src} alt={label} className="w-full h-32 object-cover transition-transform group-hover/doc:scale-105" />
+                    ) : (
+                      <div className="w-full h-32 bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center text-xs text-gray-300">No file</div>
+                    )}
+                    
+                    {isEditing && (
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] opacity-0 group-hover/doc:opacity-100 transition-opacity flex items-center justify-center">
+                         <label className="cursor-pointer p-2 bg-white rounded-full text-indigo-600 shadow-lg hover:scale-110 transition-transform">
+                            <Upload size={20} />
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  setter(file);
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => previewSetter(reader.result);
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                            />
+                         </label>
+                      </div>
+                    )}
+                  </div>
+                  {!isEditing && src && (
+                    <a href={src} target="_blank" rel="noreferrer" className="text-[10px] text-center text-indigo-500 font-bold hover:underline">View Full Document</a>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         <InfoGroup title="Security Settings" icon={Lock} color="rose">
           <DisplayItem icon={Key} label="New Password" type="password" name="password" isEditing={isEditing} formData={formData} onChange={handleInputChange} />
