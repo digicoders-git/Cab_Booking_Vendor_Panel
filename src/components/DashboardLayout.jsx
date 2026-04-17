@@ -1,5 +1,5 @@
-// src/components/DashboardLayout.jsx
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { useFont } from "../context/FontContext";
@@ -12,7 +12,7 @@ const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ✅ Auth: admin object + logout
-  const { admin, logout } = useAuth();
+  const { admin, logout, token } = useAuth();
 
   const { themeColors, toggleTheme, palette, changePalette } = useTheme();
   const { currentFont, corporateFonts, changeFont } = useFont();
@@ -32,6 +32,59 @@ const DashboardLayout = () => {
     logout();
     navigate("/login", { replace: true });
   }, [logout, navigate]);
+
+  // ✅ Firebase FCM Integration for Vendor
+  useEffect(() => {
+    const setupFCM = async () => {
+      try {
+        if (!window.firebase || !token) return;
+
+        // Initialize Firebase
+        if (window.firebase.apps.length === 0) {
+          window.firebase.initializeApp({
+            apiKey: "AIzaSyDE-xxxxxxxxxxxx",
+            authDomain: "collegepanel-1027b.firebaseapp.com",
+            projectId: "collegepanel-1027b",
+            storageBucket: "collegepanel-1027b.appspot.com",
+            messagingSenderId: "305191062086",
+            appId: "1:305191062086:web:64024844391696df3f27f1"
+          });
+        }
+
+        const messaging = window.firebase.messaging();
+        
+        // Request Permission
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          console.warn("Notification permission denied");
+          return;
+        }
+
+        // Get Token
+        const fcmToken = await messaging.getToken({
+          vapidKey: "BCHvXyEqRxxxxxxxxxxx" 
+        });
+
+        if (fcmToken) {
+          console.log("Vendor FCM Token Found:", fcmToken);
+          
+          // Send to Backend
+          await axios.patch(
+            "http://localhost:5000/api/vendor/update-fcm-token",
+            { fcmToken },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          console.log("Vendor FCM Token Synced! ✅");
+        }
+      } catch (err) {
+        console.error("FCM Setup Error:", err);
+      }
+    };
+
+    if (token) {
+      setupFCM();
+    }
+  }, [token]);
 
   return (
     <div
