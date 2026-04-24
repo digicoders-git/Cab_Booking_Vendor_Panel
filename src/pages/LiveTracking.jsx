@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from "@react-google-maps/api";
 import { io } from "socket.io-client";
 import { Search, MapPin, Car, User, Phone, CheckCircle2, AlertCircle, Clock, ListFilter, X } from "lucide-react";
@@ -7,6 +7,52 @@ import { useAuth } from "../context/AuthContext";
 
 const mapContainerStyle = { width: "100%", height: "100%" };
 const center = { lat: 26.8467, lng: 80.9462 }; // Default: Lucknow
+
+// --- Helper: Bearing Calculation ---
+const calculateBearing = (startLat, startLng, endLat, endLng) => {
+  const startLatRad = (Math.PI * startLat) / 180;
+  const startLngRad = (Math.PI * startLng) / 180;
+  const endLatRad = (Math.PI * endLat) / 180;
+  const endLngRad = (Math.PI * endLng) / 180;
+  const y = Math.sin(endLngRad - startLngRad) * Math.cos(endLatRad);
+  const x = Math.cos(startLatRad) * Math.sin(endLatRad) - Math.sin(startLatRad) * Math.cos(endLatRad) * Math.cos(endLngRad - startLngRad);
+  const brng = (Math.atan2(y, x) * 180) / Math.PI;
+  return (brng + 360) % 360;
+};
+
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+};
+
+// --- Helper: Canvas Rotation ---
+const createRotatedCanvasIcon = (iconUrl, rotation = 0, size = 64) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = iconUrl;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.translate(size / 2, size / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+      ctx.drawImage(img, -size / 2, -size / 2, size, size);
+      resolve(canvas.toDataURL());
+    };
+    img.onerror = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = "#4F46E5";
+      ctx.beginPath(); ctx.arc(size/2, size/2, size/3, 0, Math.PI*2); ctx.fill();
+      resolve(canvas.toDataURL());
+    };
+  });
+};
 
 export default function LiveTracking() {
   const { isLoaded } = useJsApiLoader({
@@ -21,6 +67,11 @@ export default function LiveTracking() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [address, setAddress] = useState("Resolving location...");
+  
+  // 🔄 Animation Refs
+  const markerObjectsRef = useRef({});
+  const lastPositionsRef = useRef({});
+  const lastHeadingsRef = useRef({});
 
   const onLoad = useCallback((map) => setMap(map), []);
   const onUnmount = useCallback(() => setMap(null), []);
@@ -59,16 +110,76 @@ export default function LiveTracking() {
       socket.emit("join_room", { userId: vendorId, role: "vendor" });
     });
 
-    socket.on("driver_location_update", (update) => {
+    socket.on("driver_location_update", async (update) => {
+      const { driverId, latitude, longitude, heading } = update;
+      
       setDrivers((prev) => {
-        const index = prev.findIndex((d) => d.driverId === update.driverId);
+        const index = prev.findIndex((d) => d.driverId === driverId);
         if (index > -1) {
+          const driver = prev[index];
+          const newPos = { lat: latitude, lng: longitude };
+          
+          // 🔄 Bearing & Rotation Logic
+          const lastPos = lastPositionsRef.current[driverId];
+          let finalHeading = heading || 0;
+          if (lastPos) {
+            const dist = calculateDistance(lastPos.lat, lastPos.lng, latitude, longitude);
+            if (dist > 0.002) {
+              finalHeading = calculateBearing(lastPos.lat, lastPos.lng, latitude, longitude);
+              lastHeadingsRef.current[driverId] = finalHeading;
+            } else {
+              finalHeading = lastHeadingsRef.current[driverId] || finalHeading;
+            }
+          }
+          lastPositionsRef.current[driverId] = newPos;
+
+          // 🚗 Smooth Animation (Manual Marker Control)
+          const marker = markerObjectsRef.current[driverId];
+          if (marker) {
+            const iconUrl = driver.carCategory?.image 
+              ? `${import.meta.env.VITE_IMAGE_BASE_URL}/uploads/${driver.carCategory.image}`
+              : "https://cdn-icons-png.flaticon.com/512/3202/3202926.png";
+
+            // Animate position
+            const startPos = marker.getPosition();
+            if (startPos) {
+              const sLat = startPos.lat();
+              const sLng = startPos.lng();
+              let stepCount = 0;
+              const numSteps = 40;
+
+              const animate = () => {
+                stepCount++;
+                if (stepCount <= numSteps) {
+                  const progress = stepCount / numSteps;
+                  const eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+                  const cLat = sLat + (latitude - sLat) * eased;
+                  const cLng = sLng + (longitude - sLng) * eased;
+                  marker.setPosition({ lat: cLat, lng: cLng });
+
+                  // Update Rotation
+                  createRotatedCanvasIcon(iconUrl, finalHeading).then(dataUrl => {
+                    if (dataUrl && markerObjectsRef.current[driverId]) {
+                      marker.setIcon({
+                        url: dataUrl,
+                        scaledSize: new window.google.maps.Size(48, 48),
+                        anchor: new window.google.maps.Point(24, 24),
+                      });
+                    }
+                  });
+                  requestAnimationFrame(animate);
+                }
+              };
+              requestAnimationFrame(animate);
+            }
+          }
+
           const newDrivers = [...prev];
           newDrivers[index] = {
             ...newDrivers[index],
-            lat: update.latitude,
-            lng: update.longitude,
-            heading: update.heading || 0,
+            lat: latitude,
+            lng: longitude,
+            heading: finalHeading,
             isOnline: true
           };
           return newDrivers;
@@ -134,21 +245,29 @@ export default function LiveTracking() {
             <Marker
               key={driver.driverId}
               position={{ lat: driver.lat, lng: driver.lng }}
+              onLoad={(marker) => {
+                markerObjectsRef.current[driver.driverId] = marker;
+                // Initial Icon Set
+                const iconUrl = driver.carCategory?.image 
+                  ? `${import.meta.env.VITE_IMAGE_BASE_URL}/uploads/${driver.carCategory.image}`
+                  : "https://cdn-icons-png.flaticon.com/512/3202/3202926.png";
+                
+                createRotatedCanvasIcon(iconUrl, driver.heading || 0).then(dataUrl => {
+                  if (dataUrl) {
+                    marker.setIcon({
+                      url: dataUrl,
+                      scaledSize: new window.google.maps.Size(48, 48),
+                      anchor: new window.google.maps.Point(24, 24),
+                    });
+                  }
+                });
+              }}
+              onUnmount={() => {
+                delete markerObjectsRef.current[driver.driverId];
+              }}
               onClick={() => setSelectedDriver(driver)}
               opacity={driver.isOnline ? 1 : 0.6}
-              // GOOGLE MAPS NATIVE SLIDING:
-              // Adding options for better marker behavior
-              options={{
-                optimized: false // This helps with smooth updates and rotation
-              }}
-              icon={{
-                url: driver.carCategory?.image 
-                  ? `${import.meta.env.VITE_IMAGE_BASE_URL}/uploads/${driver.carCategory.image}`
-                  : "https://cdn-icons-png.flaticon.com/512/3202/3202926.png", 
-                scaledSize: new window.google.maps.Size(40, 40), // Back to 40x40 as requested
-                anchor: new window.google.maps.Point(20, 20),
-                rotation: driver.heading || 0 
-              }}
+              options={{ optimized: false }}
             />
           ))}
 
