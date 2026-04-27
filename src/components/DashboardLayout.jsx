@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { useFont } from "../context/FontContext";
 import { useLocation, useNavigate, Outlet } from "react-router-dom";
+import { Toaster, toast } from "sonner";
 import routes from ".././route/SidebarRaoute";
 import Sidebar from "../pages/Sidebar";
 import Header from "./Header";
@@ -53,6 +54,15 @@ const DashboardLayout = () => {
 
         const messaging = window.firebase.messaging();
         
+        // Handle incoming messages while the app is in the foreground
+        messaging.onMessage((payload) => {
+          console.log("Foreground Message received:", payload);
+          toast.info(payload.notification?.title || "Update", {
+            description: payload.notification?.body || "Admin has updated your account.",
+            duration: 5000,
+          });
+        });
+        
         // Request Permission
         const permission = await Notification.requestPermission();
         if (permission !== "granted") {
@@ -68,9 +78,10 @@ const DashboardLayout = () => {
         if (fcmToken) {
           console.log("Vendor FCM Token Found:", fcmToken);
           
-          // Send to Backend
+          // Send to Backend (Using dynamic BASE_URL and correct plural path)
+          const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
           await axios.patch(
-            "http://localhost:5000/api/vendor/update-fcm-token",
+            `${API_BASE}/api/vendors/update-fcm-token`,
             { fcmToken },
             { headers: { Authorization: `Bearer ${token}` } }
           );
