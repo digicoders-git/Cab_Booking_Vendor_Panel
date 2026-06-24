@@ -1,8 +1,9 @@
 import { lazy } from "react";
-import { FaTachometerAlt, FaUsers, FaCar, FaWallet, FaUserCircle, FaMapMarkedAlt, FaBell, FaHeadset } from "react-icons/fa";
+import { FaTachometerAlt, FaUsers, FaCar, FaWallet, FaUserCircle, FaMapMarkedAlt, FaBell, FaHeadset, FaUserTie } from "react-icons/fa";
 
 const Dashboard  = lazy(() => import("../pages/Dashboard"));
 const Drivers    = lazy(() => import("../pages/Drivers"));
+const Agents     = lazy(() => import("../pages/Agents"));
 const Fleet      = lazy(() => import("../pages/Fleet"));
 const Earnings   = lazy(() => import("../pages/Earnings"));
 const Profile    = lazy(() => import("../pages/Profile"));
@@ -13,6 +14,7 @@ const Support = lazy(() => import("../pages/Support"));
 const routes = [
   { path: "/dashboard",  component: Dashboard,  name: "Dashboard",          icon: FaTachometerAlt },
   { path: "/drivers",    component: Drivers,    name: "Drivers",            icon: FaUsers         },
+  { path: "/agents",     component: Agents,     name: "Agents",             icon: FaUserTie       },
   { path: "/fleet",      component: Fleet,      name: "Fleet Management",   icon: FaCar           },
   { path: "/earnings",   component: Earnings,   name: "Earnings & Wallet",  icon: FaWallet        },
   { path: "/live",       component: LiveTracking, name: "Live Tracking",      icon: FaMapMarkedAlt  },
