@@ -44,7 +44,7 @@ const AddDriverModal = ({ onClose, onSuccess }) => {
   const [form, setForm] = useState({
     name: "", email: "", phone: "", password: "",
     licenseNumber: "", licenseExpiry: "",
-    carNumber: "", carModel: "", carBrand: "", carType: "", carColor: "", manufacturingYear: "",
+    vehicleType: "Car", carNumber: "", carModel: "", carBrand: "", carType: "", carColor: "", manufacturingYear: "",
     accountNumber: "", ifscCode: "", bankName: "", accountHolderName: "",
     address: "", city: "", state: "", pincode: "",
   });
@@ -159,10 +159,29 @@ const AddDriverModal = ({ onClose, onSuccess }) => {
 
         {/* Scrollable Body */}
         <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 px-6 py-4">
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Vehicle Type</label>
+              <select
+                name="vehicleType"
+                value={form.vehicleType}
+                onChange={handleChange}
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50"
+              >
+                <option value="Car">Car</option>
+                <option value="Auto">Auto</option>
+                <option value="Bike">Bike</option>
+                <option value="E-Rickshaw">E-Rickshaw</option>
+              </select>
+            </div>
+          </div>
           <div className="grid grid-cols-2 gap-4">
 
             {/* Text Sections */}
-            {Object.entries(textFields).map(([section, fields]) => (
+            {Object.entries(textFields).filter(([section]) => {
+              if (section === 'license' && form.vehicleType === 'E-Rickshaw') return false;
+              return true;
+            }).map(([section, fields]) => (
               <Fragment key={section}>
                 <SectionHeading title={sectionLabels[section]} />
                 {fields.map((f) => (
@@ -201,7 +220,10 @@ const AddDriverModal = ({ onClose, onSuccess }) => {
 
             {/* Documents */}
             <SectionHeading title="📁 Documents & Photo" />
-            {fileFields.map((f) => (
+            {fileFields.filter(f => {
+              if (f.name === 'permitImage' && (form.vehicleType === 'Bike' || form.vehicleType === 'E-Rickshaw')) return false;
+              return true;
+            }).map((f) => (
               <FileField
                 key={f.name}
                 label={f.label}
@@ -245,6 +267,7 @@ const UpdateDriverModal = ({ driver, onClose, onSuccess }) => {
     password: "",
     licenseNumber: driver.licenseNumber || "",
     licenseExpiry: driver.licenseExpiry ? driver.licenseExpiry.split("T")[0] : "",
+    vehicleType: driver.carDetails?.vehicleType || "Car",
     carNumber: driver.carDetails?.carNumber || "",
     carModel: driver.carDetails?.carModel || "",
     carBrand: driver.carDetails?.carBrand || "",
@@ -365,8 +388,28 @@ const UpdateDriverModal = ({ driver, onClose, onSuccess }) => {
           </button>
         </div>
         <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 px-6 py-4">
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Vehicle Type</label>
+              <select
+                name="vehicleType"
+                value={form.vehicleType}
+                onChange={handleChange}
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50"
+              >
+                <option value="Car">Car</option>
+                <option value="Auto">Auto</option>
+                <option value="Bike">Bike</option>
+                <option value="E-Rickshaw">E-Rickshaw</option>
+              </select>
+            </div>
+          </div>
           <div className="grid grid-cols-2 gap-4">
-            {Object.entries(textFields).map(([section, fields]) => (
+
+            {Object.entries(textFields).filter(([section]) => {
+              if (section === 'license' && form.vehicleType === 'E-Rickshaw') return false;
+              return true;
+            }).map(([section, fields]) => (
               <Fragment key={section}>
                 <SectionHeading title={sectionLabels[section]} />
                 {fields.map((f) => (
@@ -403,7 +446,10 @@ const UpdateDriverModal = ({ driver, onClose, onSuccess }) => {
               </Fragment>
             ))}
             <SectionHeading title="📁 Documents & Photo" />
-            {fileFields.map((f) => (
+            {fileFields.filter(f => {
+              if (f.name === 'permitImage' && (form.vehicleType === 'Bike' || form.vehicleType === 'E-Rickshaw')) return false;
+              return true;
+            }).map((f) => (
               <FileField
                 key={f.name}
                 label={f.label}
