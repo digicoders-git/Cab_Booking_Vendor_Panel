@@ -26,7 +26,7 @@ messaging.onBackgroundMessage((payload) => {
   
   const title = payload.notification?.title || payload.data?.title || "KwikCab Vendor Update";
   const body = payload.notification?.body || payload.data?.body || "New notification on your vendor dashboard.";
-  const icon = "/logo.png"; 
+  const icon = "/logo2.png"; 
 
   const notificationOptions = {
     body: body,
