@@ -179,14 +179,22 @@ export default function Support() {
 
             {/* Quick Contact Chips */}
             <div className="flex flex-wrap items-center gap-4">
-               <div className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-100 rounded-2xl shadow-sm hover:border-indigo-200 transition-all cursor-default">
-                  <Phone size={16} className="text-indigo-600" />
-                  <span className="text-sm font-bold text-gray-800">+91 999 000 1234</span>
-               </div>
-               <div className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-100 rounded-2xl shadow-sm hover:border-indigo-200 transition-all cursor-default">
-                  <Mail size={16} className="text-indigo-600" />
-                  <span className="text-sm font-bold text-gray-800">help@fleetapp.com</span>
-               </div>
+               <a 
+                  href="tel:+917310231010" 
+                  className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-100 rounded-2xl shadow-sm hover:border-indigo-200 hover:shadow-md transition-all cursor-pointer group"
+                  title="Call Support"
+               >
+                  <Phone size={16} className="text-indigo-600 group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-bold text-gray-800">+91 7310231010</span>
+               </a>
+               <a 
+                  href="mailto:kwikcabs9@gmail.com" 
+                  className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-100 rounded-2xl shadow-sm hover:border-indigo-200 hover:shadow-md transition-all cursor-pointer group"
+                  title="Email Support"
+               >
+                  <Mail size={16} className="text-indigo-600 group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-bold text-gray-800">kwikcabs9@gmail.com</span>
+               </a>
             </div>
          </div>
 
