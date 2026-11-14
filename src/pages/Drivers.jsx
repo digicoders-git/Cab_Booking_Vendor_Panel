@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, Fragment } from "react";
+import { useState, useEffect, useCallback, Fragment, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import api from "../utils/api";
 import {
@@ -47,7 +47,9 @@ const AddDriverModal = ({ onClose, onSuccess }) => {
     vehicleType: "Car", carNumber: "", carModel: "", carBrand: "", carType: "", carColor: "", manufacturingYear: "",
     accountNumber: "", ifscCode: "", bankName: "", accountHolderName: "",
     address: "", city: "", state: "", pincode: "",
+    addressLatitude: "", addressLongitude: "",
   });
+  const addressInputRef = useRef(null);
   const [files, setFiles] = useState({ image: null, rcImage: null, insuranceImage: null, permitImage: null, pucImage: null });
   const [previews, setPreviews] = useState({});
   const [loading, setLoading] = useState(false);
@@ -58,6 +60,60 @@ const AddDriverModal = ({ onClose, onSuccess }) => {
       .then((r) => r.json())
       .then((d) => { if (d.success) setCarCategories(d.categories || []); })
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!addressInputRef.current) return;
+
+    const setupAutocomplete = () => {
+      if (!window.google?.maps?.places?.Autocomplete) return;
+      try {
+        const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+          componentRestrictions: { country: "in" },
+        });
+
+        autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          if (!place || !place.geometry) return;
+
+          const lat = place.geometry.location.lat();
+          const lng = place.geometry.location.lng();
+
+          let city = "", state = "", pincode = "";
+          if (place.address_components) {
+            place.address_components.forEach((comp) => {
+              if (comp.types.includes("locality")) city = comp.long_name;
+              if (comp.types.includes("administrative_area_level_1")) state = comp.long_name;
+              if (comp.types.includes("postal_code")) pincode = comp.long_name;
+            });
+          }
+
+          setForm((prev) => ({
+            ...prev,
+            address: place.formatted_address || place.name || prev.address,
+            city: city || prev.city,
+            state: state || prev.state,
+            pincode: pincode || prev.pincode,
+            addressLatitude: lat,
+            addressLongitude: lng,
+          }));
+        });
+      } catch (err) {
+        console.error("Autocomplete init error:", err);
+      }
+    };
+
+    if (window.google?.maps?.places?.Autocomplete) {
+      setupAutocomplete();
+    } else {
+      const interval = setInterval(() => {
+        if (window.google?.maps?.places?.Autocomplete) {
+          setupAutocomplete();
+          clearInterval(interval);
+        }
+      }, 300);
+      return () => clearInterval(interval);
+    }
   }, []);
 
   const handleChange = (e) =>
@@ -186,15 +242,30 @@ const AddDriverModal = ({ onClose, onSuccess }) => {
                 <SectionHeading title={sectionLabels[section]} />
                 {fields.map((f) => (
                   <div key={f.name} className={f.full ? "col-span-2" : ""}>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">{f.label}</label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        {f.label}
+                      </label>
+                      {f.name === "address" && form.addressLatitude && form.addressLongitude && (
+                        <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-semibold border border-emerald-200">
+                          📍 Lat: {Number(form.addressLatitude).toFixed(4)}, Lng: {Number(form.addressLongitude).toFixed(4)}
+                        </span>
+                      )}
+                    </div>
                     <input
+                      ref={f.name === "address" ? addressInputRef : undefined}
                       type={f.type}
                       name={f.name}
                       value={form[f.name]}
                       onChange={handleChange}
-                      placeholder={f.placeholder}
+                      placeholder={f.name === "address" ? "Start typing address for Google suggestions..." : f.placeholder}
                       className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-all bg-gray-50"
                     />
+                    {f.name === "address" && (
+                      <p className="text-[10px] text-gray-400 mt-1">
+                        Select address from Google suggestions to auto-capture Coordinates, City, State & Pincode.
+                      </p>
+                    )}
                   </div>
                 ))}
                 {section === "car" && (
@@ -282,7 +353,10 @@ const UpdateDriverModal = ({ driver, onClose, onSuccess }) => {
     city: driver.city || "",
     state: driver.state || "",
     pincode: driver.pincode || "",
+    addressLatitude: driver.addressLatitude || "",
+    addressLongitude: driver.addressLongitude || "",
   });
+  const editAddressInputRef = useRef(null);
   const [files, setFiles] = useState({ image: null, rcImage: null, insuranceImage: null, permitImage: null, pucImage: null });
   const [previews, setPreviews] = useState({});
   const [loading, setLoading] = useState(false);
@@ -293,6 +367,60 @@ const UpdateDriverModal = ({ driver, onClose, onSuccess }) => {
       .then((r) => r.json())
       .then((d) => { if (d.success) setCarCategories(d.categories || []); })
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!editAddressInputRef.current) return;
+
+    const setupAutocomplete = () => {
+      if (!window.google?.maps?.places?.Autocomplete) return;
+      try {
+        const autocomplete = new window.google.maps.places.Autocomplete(editAddressInputRef.current, {
+          componentRestrictions: { country: "in" },
+        });
+
+        autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          if (!place || !place.geometry) return;
+
+          const lat = place.geometry.location.lat();
+          const lng = place.geometry.location.lng();
+
+          let city = "", state = "", pincode = "";
+          if (place.address_components) {
+            place.address_components.forEach((comp) => {
+              if (comp.types.includes("locality")) city = comp.long_name;
+              if (comp.types.includes("administrative_area_level_1")) state = comp.long_name;
+              if (comp.types.includes("postal_code")) pincode = comp.long_name;
+            });
+          }
+
+          setForm((prev) => ({
+            ...prev,
+            address: place.formatted_address || place.name || prev.address,
+            city: city || prev.city,
+            state: state || prev.state,
+            pincode: pincode || prev.pincode,
+            addressLatitude: lat,
+            addressLongitude: lng,
+          }));
+        });
+      } catch (err) {
+        console.error("Edit Autocomplete init error:", err);
+      }
+    };
+
+    if (window.google?.maps?.places?.Autocomplete) {
+      setupAutocomplete();
+    } else {
+      const interval = setInterval(() => {
+        if (window.google?.maps?.places?.Autocomplete) {
+          setupAutocomplete();
+          clearInterval(interval);
+        }
+      }, 300);
+      return () => clearInterval(interval);
+    }
   }, []);
 
   const handleChange = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
@@ -414,15 +542,28 @@ const UpdateDriverModal = ({ driver, onClose, onSuccess }) => {
                 <SectionHeading title={sectionLabels[section]} />
                 {fields.map((f) => (
                   <div key={f.name} className={f.full ? "col-span-2" : ""}>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">{f.label}</label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">{f.label}</label>
+                      {f.name === "address" && form.addressLatitude && form.addressLongitude && (
+                        <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-semibold border border-emerald-200">
+                          📍 Lat: {Number(form.addressLatitude).toFixed(4)}, Lng: {Number(form.addressLongitude).toFixed(4)}
+                        </span>
+                      )}
+                    </div>
                     <input
+                      ref={f.name === "address" ? editAddressInputRef : undefined}
                       type={f.type}
                       name={f.name}
                       value={form[f.name]}
                       onChange={handleChange}
-                      placeholder={f.placeholder}
+                      placeholder={f.name === "address" ? "Start typing address for Google suggestions..." : f.placeholder}
                       className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all bg-gray-50"
                     />
+                    {f.name === "address" && (
+                      <p className="text-[10px] text-gray-400 mt-1">
+                        Select address from Google suggestions to auto-update Coordinates, City, State & Pincode.
+                      </p>
+                    )}
                   </div>
                 ))}
                 {section === "car" && (
@@ -614,6 +755,19 @@ const ViewDriverModal = ({ driverId, onClose }) => {
                   <InfoRow label="City"    value={driver.city} />
                   <InfoRow label="State"   value={driver.state} />
                   <InfoRow label="Pincode" value={driver.pincode} />
+                  {driver.addressLatitude && driver.addressLongitude && (
+                    <div className="pt-2 flex items-center justify-between text-xs border-t border-gray-100 mt-2">
+                      <span className="text-gray-400">Coordinates:</span>
+                      <a
+                        href={`https://www.google.com/maps?q=${driver.addressLatitude},${driver.addressLongitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 hover:underline"
+                      >
+                        📍 Google Maps ({Number(driver.addressLatitude).toFixed(4)}, {Number(driver.addressLongitude).toFixed(4)})
+                      </a>
+                    </div>
+                  )}
                 </Section>
               </div>
             </div>
