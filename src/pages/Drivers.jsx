@@ -128,6 +128,42 @@ const AddDriverModal = ({ onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ─── Frontend Validation: Check all required fields ───
+    const missing = [];
+    if (!form.name?.trim()) missing.push("Full Name");
+    if (!form.email?.trim()) missing.push("Email");
+    if (!form.phone?.trim()) missing.push("Phone");
+    if (!form.password?.trim()) missing.push("Password");
+    if (form.vehicleType !== "E-Rickshaw" && !form.licenseNumber?.trim()) missing.push("License Number");
+    if (!form.carNumber?.trim()) missing.push("Car Number");
+    if (!form.carType) missing.push("Car Type");
+    if (!form.address?.trim()) missing.push("Address");
+    if (!files.image) missing.push("Driver Photo");
+
+    if (missing.length > 0) {
+      if (missing.length >= 4) {
+        toast.error("Please fill all required fields");
+      } else {
+        toast.error(`Please fill required fields: ${missing.join(", ")}`);
+      }
+      return;
+    }
+
+    // Phone format validation
+    const cleanedPhone = form.phone.trim().replace(/\D/g, "");
+    if (cleanedPhone.length < 10) {
+      toast.error("Please enter a valid 10-digit phone number");
+      return;
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email.trim())) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
     setLoading(true);
     try {
       const fd = new FormData();
@@ -434,6 +470,36 @@ const UpdateDriverModal = ({ driver, onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ─── Frontend Validation: Check required fields ───
+    const missing = [];
+    if (!form.name?.trim()) missing.push("Full Name");
+    if (!form.email?.trim()) missing.push("Email");
+    if (!form.phone?.trim()) missing.push("Phone");
+    if (form.vehicleType !== "E-Rickshaw" && !form.licenseNumber?.trim()) missing.push("License Number");
+    if (!form.address?.trim()) missing.push("Address");
+
+    if (missing.length > 0) {
+      if (missing.length >= 3) {
+        toast.error("Please fill all required fields");
+      } else {
+        toast.error(`Please fill required fields: ${missing.join(", ")}`);
+      }
+      return;
+    }
+
+    const cleanedPhone = form.phone.trim().replace(/\D/g, "");
+    if (cleanedPhone.length < 10) {
+      toast.error("Please enter a valid 10-digit phone number");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email.trim())) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
     setLoading(true);
     try {
       const fd = new FormData();
